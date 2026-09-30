@@ -107,9 +107,12 @@ public struct WanPipeline: VideoPipeline {
         let tokenizerURL = url.appendingPathComponent("tokenizer")
         let tokenizer = try await AutoTokenizer.from(modelFolder: tokenizerURL)
 
-        let transformerURL = try Self.resolveExistingAsset("Transformer.aimodel", in: url, component: "transformer")
-        let textEncoderURL = try Self.resolveExistingAsset("TextEncoder.aimodel", in: url, component: "text_encoder")
-        let decoderURL = try Self.resolveExistingAsset("VAEDecoder.aimodel", in: url, component: "vae_decoder")
+        let transformerURL = try resolveExistingPipelineAsset(
+            Asset.transformer, in: url, component: DiffusionComponentKey.transformer)
+        let textEncoderURL = try resolveExistingPipelineAsset(
+            Asset.textEncoder, in: url, component: DiffusionComponentKey.textEncoder)
+        let decoderURL = try resolveExistingPipelineAsset(
+            Asset.vaeDecoder, in: url, component: DiffusionComponentKey.vaeDecoder)
 
         self.init(
             transformer: CoreAIDiffusionModelFunction(modelURL: transformerURL),
@@ -126,16 +129,11 @@ public struct WanPipeline: VideoPipeline {
         )
     }
 
-    /// Resolves `name` against `url` and verifies the asset exists on disk, throwing
-    /// `WanError.invalidMetadata` with the attempted filename if not — e.g. when a
-    /// bundle still names a source `.aimodel` that's since been compiled to `.aimodelc`
-    /// without updating metadata.json.
-    private static func resolveExistingAsset(_ name: String, in url: URL, component: String) throws -> URL {
-        let resolved = url.appendingPathComponent(name)
-        guard FileManager.default.fileExists(atPath: resolved.path) else {
-            throw WanError.invalidMetadata("\(component) not found (expected \(resolved.lastPathComponent))")
-        }
-        return resolved
+    /// Wan bundles use fixed component filenames; the metadata `assets` names are not consulted here.
+    private enum Asset {
+        static let transformer = "Transformer.aimodel"
+        static let textEncoder = "TextEncoder.aimodel"
+        static let vaeDecoder = "VAEDecoder.aimodel"
     }
 
     // MARK: - VideoPipeline
