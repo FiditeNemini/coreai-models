@@ -75,7 +75,8 @@ public struct CoreAIRunner {
             variant: engineVariant,
             kvCacheStrategy: kvCacheStrategy,
             prefillChunkSize: resolvedChunkSize,
-            prefillChunkThreshold: resolvedThreshold
+            prefillChunkThreshold: resolvedThreshold,
+            tensorData: bundle.tensorData
         )
 
         return try await EngineFactory.createEngine(
@@ -88,19 +89,8 @@ public struct CoreAIRunner {
     // MARK: - Private Helpers
 
     private func makeConfig() -> ModelConfig {
-        let functionName = bundle.language.functionMap?.name(for: "main") ?? "main"
-        let modelAsset = bundle.modelAssetPath
-        return ModelConfig(
-            name: bundle.name,
-            tokenizer: bundle.tokenizer,
-            vocabSize: bundle.vocabSize,
-            maxContextLength: bundle.maxContextLength,
-            source: ModelSource(
-                hfModelId: bundle.tokenizer,
-                modelDefinition: .pyTorch
-            ),
-            serializedModel: [modelAsset],
-            function: functionName
-        )
+        ModelConfig(
+            bundle: bundle,
+            source: ModelSource(hfModelId: bundle.tokenizer, modelDefinition: .pyTorch))
     }
 }

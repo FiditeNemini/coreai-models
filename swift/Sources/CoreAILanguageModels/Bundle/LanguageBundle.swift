@@ -61,6 +61,20 @@ public struct LanguageBundle: Sendable {
     public var vocabSize: Int { language.vocabSize }
     public var maxContextLength: Int { language.maxContextLength }
 
+    /// Model-specific runtime settings (`language.overrides`); nil for most models.
+    public var overrides: LanguageOverrides? { language.overrides }
+
+    /// Tensor data the engine reads alongside the model, keyed by `assets` role. Only
+    /// roles the bundle declares are present.
+    public var tensorData: [String: URL] {
+        var resolved: [String: URL] = [:]
+        let key = EngineOptions.TensorDataKey.perLayerEmbeddings
+        if let url = modelBundle.modelURL(for: key) {
+            resolved[key] = url
+        }
+        return resolved
+    }
+
     /// Raw metadata bytes for passing to engine config parsers.
     public var rawMetadata: Data { modelBundle.raw }
 
